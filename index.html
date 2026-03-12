@@ -261,7 +261,7 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
 <div class="page" id="page-board">
   <div class="card">
     <div class="board-tabs">
-      <button class="btab active" onclick="switchBoard('practice',this)">🎯 연습모드 TOP5</button>
+      <button class="btab active" onclick="switchBoard('practice',this)">🎯 연습모드 TOP10</button>
       <button class="btab" onclick="switchBoard('challenge',this)">🏅 도전모드 Pass</button>
     </div>
     <div class="board-section active" id="board-practice"><div class="empty-board">불러오는 중...</div></div>
@@ -965,11 +965,11 @@ async function renderPracticeBoard(){
   const el=document.getElementById('board-practice');
   el.innerHTML='<div class="empty-board">불러오는 중...</div>';
   try {
-    // get top 5 by score desc
-    const rows=await sb('leaderboard?select=*&order=score.desc,created_at.asc&limit=5');
+    // 점수 내림차순, 동점이면 최신 기록이 위로
+    const rows=await sb('leaderboard?select=*&order=score.desc,created_at.desc&limit=10');
     if(!rows||!rows.length){ el.innerHTML='<div class="empty-board">아직 기록이 없어요 🎯<br>연습 모드를 플레이하면 여기에 기록됩니다.</div>'; return; }
-    const medals=['🥇','🥈','🥉','4위','5위'];
-    const rankCls=['rank-1','rank-2','rank-3','',''];
+    const medals=['🥇','🥈','🥉','4위','5위','6위','7위','8위','9위','10위'];
+    const rankCls=['rank-1','rank-2','rank-3','','','','','','',''];
     el.innerHTML=`<table class="lb-table">
       <thead><tr><th>순위</th><th>별명</th><th>점수</th><th>노래</th><th>날짜</th><th>시간</th></tr></thead>
       <tbody>${rows.map((r,i)=>{

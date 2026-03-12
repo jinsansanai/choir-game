@@ -47,6 +47,8 @@ body::before{content:'';position:fixed;inset:0;
 .btn-primary:hover{opacity:.85;transform:translateY(-1px);}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .btn-secondary:hover{border-color:rgba(255,255,255,.2);}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.2);}
 .btn-sm{padding:7px 14px;font-size:13px;}
 .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
 .icon-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--dim);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
@@ -78,7 +80,6 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
 .song-item{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;transition:all .2s;}
 .song-item-info{flex:1;min-width:0;}
 .song-item-name{font-size:14px;font-weight:600;}
-.song-item-meta{font-size:11px;color:var(--dim);margin-top:2px;}
 
 /* Status grid */
 .voice-status{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
@@ -124,13 +125,49 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
 .prog-bar-wrap{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:18px;overflow:hidden;}
 .prog-bar{height:100%;background:linear-gradient(90deg,var(--gold),#e8c4f0);border-radius:2px;transition:width .4s;}
 
-/* Context */
+/* Context — 5줄 구조 */
 .context-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:18px;}
-.ctx-line{font-family:'Noto Serif KR',serif;font-size:15px;line-height:2.2;color:var(--dim);min-height:30px;}
-.ctx-line.focus{color:var(--text);font-size:17px;font-weight:600;}
-.ctx-blank{display:inline-block;background:rgba(212,168,83,.15);border:2px solid var(--gold);border-radius:6px;padding:1px 14px;min-width:60px;text-align:center;color:var(--gold);font-weight:700;letter-spacing:.05em;}
-.ctx-blank-other{display:inline-block;background:rgba(255,255,255,.05);border:2px dashed rgba(255,255,255,.2);border-radius:6px;padding:1px 10px;min-width:40px;text-align:center;color:var(--dim);}
-.ctx-revealed{border-color:rgba(255,255,255,.3)!important;color:var(--text)!important;background:rgba(255,255,255,.07)!important;}
+/* 기본(멀리): 흐린 회색 */
+.ctx-line{font-family:'Noto Serif KR',serif;font-size:13px;line-height:2.0;color:rgba(240,237,232,0.3);min-height:24px;}
+/* 바로 앞/뒤(near): 좀 더 밝게 */
+.ctx-line.near{font-size:14px;line-height:2.1;color:rgba(240,237,232,0.55);}
+/* 문제 줄(focus): 크고 밝고 굵게 */
+.ctx-line.focus{font-size:20px;font-weight:700;line-height:2.4;color:#ffffff;letter-spacing:.01em;}
+
+/* 정답 물음표 빈칸: 속 빈 금색 네모 + ??? */
+.ctx-blank{
+  display:inline-block;
+  background:transparent;
+  border:2px solid var(--gold);
+  border-radius:4px;
+  padding:1px 10px;
+  min-width:52px;
+  text-align:center;
+  color:var(--gold);
+  font-weight:700;
+  font-size:.85em;
+  letter-spacing:.05em;
+  vertical-align:middle;
+}
+/* 기타 가려진 단어: 속 빈 회색 네모 */
+.ctx-blank-other{
+  display:inline-block;
+  background:transparent;
+  border:2px solid rgba(255,255,255,0.22);
+  border-radius:4px;
+  padding:1px 10px;
+  min-width:40px;
+  text-align:center;
+  color:transparent;
+  font-size:.85em;
+  vertical-align:middle;
+}
+/* 정답 공개 후 */
+.ctx-revealed{
+  border-color:rgba(255,255,255,.35)!important;
+  color:rgba(240,237,232,.8)!important;
+  background:rgba(255,255,255,.05)!important;
+}
 
 /* MCQ */
 .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
@@ -193,6 +230,20 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
 .modal-overlay.show .modal{transform:scale(1);}
 .modal-title{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;margin-bottom:16px;}
 
+/* Lyrics viewer modal */
+.lyrics-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:flex-start;justify-content:center;padding:32px 16px 48px;z-index:350;opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto;}
+.lyrics-modal-overlay.show{opacity:1;pointer-events:all;}
+.lyrics-modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;width:100%;max-width:580px;transform:scale(.97);transition:transform .2s;margin:auto;}
+.lyrics-modal-overlay.show .lyrics-modal{transform:scale(1);}
+.lyrics-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px;}
+.lyrics-modal-title{font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;}
+.lyrics-modal-sub{font-size:13px;color:var(--dim);margin-top:4px;}
+.lyrics-close-btn{flex-shrink:0;background:none;border:1px solid var(--border);border-radius:8px;color:var(--dim);font-size:18px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.lyrics-close-btn:hover{color:var(--text);border-color:rgba(255,255,255,.2);}
+.lyrics-body{font-family:'Noto Serif KR',serif;font-size:17px;line-height:2.5;color:var(--text);}
+.lyrics-body .lyric-line{padding:2px 0;}
+.lyrics-body .lyric-blank{height:24px;display:block;color:var(--dim);font-size:13px;text-align:center;letter-spacing:.2em;}</p>
+
 /* Toast */
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:10px 22px;font-size:14px;opacity:0;transition:all .3s;pointer-events:none;z-index:1000;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -242,12 +293,13 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
       <button class="vtab" data-v="tenor"   onclick="pickVoice('tenor',this)">테너</button>
       <button class="vtab" data-v="bass"    onclick="pickVoice('bass',this)">베이스</button>
     </div>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="viewFullLyrics()">📄 전체 가사 보기</button>
   </div>
   <div class="home-grid">
     <div class="home-card practice" onclick="startFlow('practice')">
       <div class="home-card-icon">🎯</div>
       <div class="home-card-title">연습 모드</div>
-      <div class="home-card-desc">4지선다 10문제<br>최고 점수 TOP5 기록</div>
+      <div class="home-card-desc">4지선다 10문제<br>최고 점수 TOP10 기록</div>
     </div>
     <div class="home-card challenge" onclick="startFlow('challenge')">
       <div class="home-card-icon">🏅</div>
@@ -340,11 +392,8 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
         <button class="btn btn-secondary btn-sm" onclick="confirmQuit()">✕ 종료</button>
       </div>
       <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
-      <div class="context-wrap">
-        <div class="ctx-line" id="ctx-prev"></div>
-        <div class="ctx-line focus" id="ctx-curr"></div>
-        <div class="ctx-line" id="ctx-next"></div>
-      </div>
+      <!-- 5줄 context: prev2, prev1, focus, next1, next2 -->
+      <div class="context-wrap" id="context-wrap"></div>
       <!-- MCQ -->
       <div id="mcq-area">
         <div style="font-size:12px;color:var(--dim);margin-bottom:10px;">알맞은 단어를 고르세요</div>
@@ -352,7 +401,7 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
       </div>
       <!-- Challenge -->
       <div id="challenge-area" style="display:none;">
-        <div style="font-size:12px;color:var(--dim);margin-bottom:10px;">가려진 단어를 정확히 입력하세요</div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:10px;">가려진 단어를 정확히 입력하세요 (문장부호 제외)</div>
         <input class="challenge-input" id="challenge-input" placeholder="단어 입력 후 Enter" autocomplete="off" onkeydown="if(event.key==='Enter')checkChallenge()">
         <div class="btn-row">
           <button class="btn btn-primary" id="ch-check-btn" onclick="checkChallenge()">✓ 확인</button>
@@ -410,6 +459,20 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
   </div>
 </div>
 
+<!-- Lyrics viewer modal -->
+<div class="lyrics-modal-overlay" id="lyrics-modal">
+  <div class="lyrics-modal">
+    <div class="lyrics-modal-header">
+      <div>
+        <div class="lyrics-modal-title" id="lm-title"></div>
+        <div class="lyrics-modal-sub" id="lm-sub"></div>
+      </div>
+      <button class="lyrics-close-btn" onclick="closeLyricsModal()">✕</button>
+    </div>
+    <div class="lyrics-body" id="lm-body"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -428,10 +491,10 @@ async function sb(path, opts={}){
   const txt = await res.text();
   return txt ? JSON.parse(txt) : null;
 }
-const dbGet  = (t,q='')       => sb(t+'?'+q+'&order=created_at.asc');
-const dbPost = (t,body)       => sb(t, {method:'POST', body:JSON.stringify(body), headers:{...HDR,'Prefer':'return=representation'}});
-const dbPatch= (t,q,body)     => sb(t+'?'+q, {method:'PATCH', body:JSON.stringify(body), headers:{...HDR,'Prefer':'return=representation'}});
-const dbDel  = (t,q)          => sb(t+'?'+q, {method:'DELETE'});
+const dbGet   = (t,q='')   => sb(t+'?'+q+'&order=created_at.asc');
+const dbPost  = (t,body)   => sb(t, {method:'POST', body:JSON.stringify(body), headers:{...HDR,'Prefer':'return=representation'}});
+const dbPatch = (t,q,body) => sb(t+'?'+q, {method:'PATCH', body:JSON.stringify(body), headers:{...HDR,'Prefer':'return=representation'}});
+const dbDel   = (t,q)      => sb(t+'?'+q, {method:'DELETE'});
 
 // ═══════════════════════════════════════════
 //  STATE
@@ -452,9 +515,7 @@ async function init(){
     if(songs.length){ selSongId=songs[0].id; adminSongId=songs[0].id; }
     renderHomeSongPicker();
     await renderBoards();
-  } catch(e){
-    showToast('❌ 서버 연결 실패: '+e.message);
-  }
+  } catch(e){ showToast('❌ 서버 연결 실패: '+e.message); }
   hideLoading();
 }
 
@@ -531,7 +592,6 @@ async function addSong(){
     const [song]=await dbPost('songs',{name});
     songs.push(song); selSongId=song.id; adminSongId=song.id;
     inp.value='';
-    // create empty lyrics rows for all voices
     for(const v of Object.keys(VOICE_NAMES)){
       await dbPost('lyrics',{song_id:song.id,voice:v,content:''});
     }
@@ -580,9 +640,7 @@ function renderAdminSongList(){
   el.innerHTML=songs.map(s=>`
     <div class="song-item">
       <span style="font-size:18px;">🎼</span>
-      <div class="song-item-info">
-        <div class="song-item-name">${esc(s.name)}</div>
-      </div>
+      <div class="song-item-info"><div class="song-item-name">${esc(s.name)}</div></div>
       <div style="display:flex;gap:6px;">
         <button class="icon-btn" onclick="openRename('${s.id}')">✏️</button>
         <button class="icon-btn del" onclick="deleteSong('${s.id}')">🗑</button>
@@ -594,9 +652,7 @@ function renderAdminSongList(){
 //  ADMIN: LYRICS
 // ═══════════════════════════════════════════
 async function loadAdminLyricsPage(){
-  syncLyricsSel();
-  await loadLyricsTA();
-  await renderAdminStatus();
+  syncLyricsSel(); await loadLyricsTA(); await renderAdminStatus();
 }
 function syncLyricsSel(){
   const sel=document.getElementById('lyrics-song-sel');
@@ -632,7 +688,6 @@ async function saveLyrics(){
   const content=document.getElementById('lyrics-ta').value.trim();
   showLoading('저장 중...');
   try {
-    // upsert: check if row exists
     const rows=await dbGet('lyrics','song_id=eq.'+adminSongId+'&voice=eq.'+adminVoice);
     if(rows.length){
       await dbPatch('lyrics','id=eq.'+rows[0].id,{content, updated_at: new Date().toISOString()});
@@ -688,6 +743,42 @@ function pickVoice(v,btn){
 }
 
 // ═══════════════════════════════════════════
+//  FULL LYRICS VIEWER
+// ═══════════════════════════════════════════
+async function viewFullLyrics(){
+  if(!selSongId){ showToast('⚠️ 노래를 먼저 선택해 주세요'); return; }
+  showLoading('가사 불러오는 중...');
+  try {
+    const rows=await dbGet('lyrics','song_id=eq.'+selSongId+'&voice=eq.'+selVoice);
+    const content=rows[0]?.content||'';
+    const songName=songs.find(s=>s.id===selSongId)?.name||'';
+    const voiceName=VOICE_NAMES[selVoice];
+
+    document.getElementById('lm-title').textContent='🎼 '+songName;
+    document.getElementById('lm-sub').textContent=voiceName+' 파트 전체 가사';
+
+    if(!content.trim()){
+      document.getElementById('lm-body').innerHTML='<span style="color:var(--dim);font-size:14px;">아직 가사가 입력되지 않았습니다.</span>';
+    } else {
+      // 빈 줄은 절 구분선으로, 일반 줄은 그대로 표시
+      const lines = content.split('\n');
+      document.getElementById('lm-body').innerHTML = lines.map(l=>{
+        if(!l.trim()) return '<div style="height:18px;"></div>';
+        return `<div class="lyric-line">${esc(l)}</div>`;
+      }).join('');
+    }
+    hideLoading();
+    document.getElementById('lyrics-modal').classList.add('show');
+  } catch(e){
+    hideLoading();
+    showToast('❌ '+e.message);
+  }
+}
+function closeLyricsModal(){
+  document.getElementById('lyrics-modal').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════
 //  GAME FLOW
 // ═══════════════════════════════════════════
 async function startFlow(mode){
@@ -708,53 +799,40 @@ async function startFlow(mode){
   showStep('nick');
   goPage('game');
   window._gameLines=lines;
-  window._aiBlankMap=null; // 초기화
+  window._aiBlankMap=null;
 
-  // 연습모드일 때만 AI 분석 미리 수행
   if(mode==='practice'){
-    showLoading('AI가 문맥을 분석하는 중... 잠시만 기다려 주세요 ✨');
-    try {
-      window._aiBlankMap = await analyzeKeyWordsWithAI(lines);
-    } catch(e){
-      console.warn('AI 분석 실패, 랜덤 방식으로 대체:', e.message);
-      window._aiBlankMap = null;
-    }
+    showLoading('AI가 문맥을 분석하는 중... ✨');
+    try { window._aiBlankMap = await analyzeKeyWordsWithAI(lines); }
+    catch(e){ console.warn('AI 분석 실패, 랜덤 방식 사용:', e.message); window._aiBlankMap=null; }
     hideLoading();
   }
 }
 
-// Claude API로 가사 핵심 단어 분석
+// Claude API — 핵심 단어 분석
 async function analyzeKeyWordsWithAI(lines){
-  const prompt = `아래는 합창곡 가사입니다. 각 줄에서 가사를 외우는 연습에 가장 중요한 핵심 단어 1~3개를 골라주세요.
-핵심 단어는 의미상 중요하거나, 감정을 전달하거나, 기억하기 어려운 단어여야 합니다.
+  const prompt=`아래는 합창곡 가사입니다. 각 줄에서 가사 암기 연습에 가장 중요한 핵심 단어 1~3개를 골라주세요.
+핵심 단어 기준: 의미상 중요하거나, 감정을 전달하거나, 기억하기 어려운 단어.
 조사(은/는/이/가/을/를/의/에/로/으로)만 있는 단어는 피해주세요.
 
 가사:
 ${lines.map((l,i)=>`${i}번: ${l}`).join('\n')}
 
-각 줄 번호와 해당 줄에서 가릴 단어들의 인덱스(0부터 시작)를 JSON 배열로만 응답하세요.
-다른 설명 없이 오직 JSON만 응답하세요.
-형식: [{"line":0,"blanks":[1,2]},{"line":1,"blanks":[0]}, ...]
-- blanks는 해당 줄을 공백으로 split했을 때의 단어 인덱스입니다
-- 단어가 2개 이하인 줄은 blanks를 [0]으로 해주세요
-- 반드시 모든 줄에 대해 응답해주세요`;
+각 줄 번호와 가릴 단어의 인덱스(0부터, 공백 split 기준)를 JSON만 응답하세요.
+형식: [{"line":0,"blanks":[1,2]},{"line":1,"blanks":[0]},...]
+- 단어 2개 이하인 줄은 blanks를 [0]
+- 반드시 모든 줄에 응답`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
   });
-  const data = await res.json();
-  const text = data.content?.find(c=>c.type==='text')?.text || '[]';
-  const clean = text.replace(/```json|```/g,'').trim();
-  const parsed = JSON.parse(clean);
-  // line번호 → blanks 맵으로 변환
-  const map = {};
-  parsed.forEach(({line, blanks}) => { map[line] = blanks; });
+  const data=await res.json();
+  const text=data.content?.find(c=>c.type==='text')?.text||'[]';
+  const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+  const map={};
+  parsed.forEach(({line,blanks})=>{ map[line]=blanks; });
   return map;
 }
 
@@ -770,9 +848,11 @@ async function startGame(){
   renderQ();
 }
 
+// 문장부호 제거 (도전모드 정답 비교용)
+function stripPunct(s){ return s.replace(/[.,!?;:'"()[\]{}·…—–\-~「」『』【】〈〉《》]/g,'').trim(); }
+
 function buildQuestions(lines, count){
-  const minWords = gameMode==='practice' ? 2 : 2;
-  const eligible=lines.map((l,i)=>({i,l})).filter(x=>x.l.split(/\s+/).length>=minWords);
+  const eligible=lines.map((l,i)=>({i,l})).filter(x=>x.l.split(/\s+/).length>=2);
   if(!eligible.length) return [];
   const pool=shuffle([...eligible]).slice(0,Math.min(count,eligible.length));
   pool.sort((a,b)=>a.i-b.i);
@@ -783,42 +863,80 @@ function buildQuestions(lines, count){
 
     if(gameMode==='practice'){
       let blankIndices;
-
-      // AI 분석 결과가 있으면 사용, 없으면 랜덤
       if(window._aiBlankMap && window._aiBlankMap[i]){
-        blankIndices = window._aiBlankMap[i].filter(idx=>idx>=0 && idx<words.length);
+        blankIndices=window._aiBlankMap[i].filter(idx=>idx>=0&&idx<words.length);
         if(!blankIndices.length) blankIndices=[0];
       } else {
-        // 폴백: 단어 수에 따라 랜덤 2~3개
-        const blankCount = words.length<=4 ? 2 : 3;
-        const maxStart = words.length - blankCount;
-        const blankStart = Math.floor(Math.random()*(maxStart+1));
-        blankIndices = Array.from({length:blankCount},(_,k)=>blankStart+k);
+        const bc=words.length<=4?2:3;
+        const ms=words.length-bc;
+        const bs=Math.floor(Math.random()*(ms+1));
+        blankIndices=Array.from({length:bc},(_,k)=>bs+k);
       }
-
-      // 가려진 단어 중 1개를 정답 문제로 선택
-      const askIdx = blankIndices[Math.floor(Math.random()*blankIndices.length)];
-      const answer = words[askIdx];
-      const dist = shuffle(allWords.filter(w=>w!==answer)).slice(0,3);
-      const options = shuffle([answer,...dist]);
-
-      return {
-        prevLine:  i>0 ? lines[i-1] : '',
-        currLine:  l,
-        nextLine:  i<lines.length-1 ? lines[i+1] : '',
-        words, blankIndices, askIdx, answer, options
-      };
+      const askIdx=blankIndices[Math.floor(Math.random()*blankIndices.length)];
+      const answer=words[askIdx];
+      const dist=shuffle(allWords.filter(w=>w!==answer)).slice(0,3);
+      const options=shuffle([answer,...dist]);
+      return {lineIdx:i, prevLine:i>0?lines[i-1]:'', currLine:l,
+              nextLine:i<lines.length-1?lines[i+1]:'',
+              words, blankIndices, askIdx, answer, options, allLines:lines};
     } else {
-      // 도전모드: 단어 1개 가리기 (직접 입력)
+      // 도전모드: 단어 1개, 문장부호 제거 후 정답 비교
       const blankIdx=Math.floor(Math.random()*words.length);
-      return {
-        prevLine:  i>0 ? lines[i-1] : '',
-        currLine:  l,
-        nextLine:  i<lines.length-1 ? lines[i+1] : '',
-        words, blankIndices:[blankIdx], askIdx:blankIdx, answer:words[blankIdx], options:null
-      };
+      const rawAnswer=words[blankIdx];
+      const answer=stripPunct(rawAnswer); // 문장부호 제거한 정답
+      return {lineIdx:i, prevLine:i>0?lines[i-1]:'', currLine:l,
+              nextLine:i<lines.length-1?lines[i+1]:'',
+              words, blankIndices:[blankIdx], askIdx:blankIdx,
+              answer, rawAnswer, options:null, allLines:lines};
     }
   });
+}
+
+// ═══════════════════════════════════════════
+//  RENDER QUESTION — 앞뒤 2줄씩 표시
+// ═══════════════════════════════════════════
+function buildContextHTML(q, revealed=false, correct=null){
+  const lines=q.allLines;
+  const ci=q.lineIdx;
+
+  // 표시할 줄: [ci-2, ci-1, ci(focus), ci+1, ci+2]
+  const slots=[ci-2, ci-1, ci, ci+1, ci+2];
+
+  return slots.map(idx=>{
+    const isFocus=(idx===ci);
+    const isNear=(idx===ci-1||idx===ci+1);
+
+    let cls='ctx-line';
+    if(isFocus) cls+=' focus';
+    else if(isNear) cls+=' near';
+
+    // 범위 밖이면 빈 줄
+    if(idx<0||idx>=lines.length){
+      return `<div class="${cls}" style="min-height:${isFocus?'38px':'22px'};"></div>`;
+    }
+
+    if(!isFocus){
+      return `<div class="${cls}">${esc(lines[idx])}</div>`;
+    }
+
+    // Focus 줄: 빈칸 처리
+    const wordHTML=q.words.map((w,wi)=>{
+      if(wi===q.askIdx){
+        if(revealed){
+          const color=correct?'var(--green)':'var(--red)';
+          return `<span class="ctx-blank" style="border-color:${color};color:${color};">${esc(w)}</span>`;
+        }
+        return `<span class="ctx-blank">???</span>`;
+      }
+      if(q.blankIndices.includes(wi)){
+        if(revealed) return `<span class="ctx-blank-other ctx-revealed">${esc(w)}</span>`;
+        return `<span class="ctx-blank-other">&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
+      }
+      return esc(w);
+    }).join(' ');
+
+    return `<div class="${cls}">${wordHTML}</div>`;
+  }).join('');
 }
 
 function renderQ(){
@@ -830,17 +948,7 @@ function renderQ(){
   document.getElementById('prog-bar').style.width=((qIndex/total)*100)+'%';
   document.getElementById('feedback').classList.remove('show','ok','fail');
 
-  document.getElementById('ctx-prev').textContent=q.prevLine||'';
-  document.getElementById('ctx-next').textContent=q.nextLine||'';
-
-  // 가려진 단어들: 정답 칸은 '?' 강조, 나머지 빈칸은 '___' 회색으로
-  document.getElementById('ctx-curr').innerHTML=q.words.map((w,i)=>{
-    if(i===q.askIdx)
-      return '<span class="ctx-blank">?</span>';
-    if(q.blankIndices.includes(i))
-      return '<span class="ctx-blank-other">　'.repeat(Math.max(1,w.length))+'</span>';
-    return esc(w);
-  }).join(' ');
+  document.getElementById('context-wrap').innerHTML=buildContextHTML(q);
 
   if(gameMode==='practice'){
     document.getElementById('mcq-area').style.display='';
@@ -870,23 +978,14 @@ function pickOption(btn,chosen){
     if(bVal===q.answer) b.classList.add('correct');
     else if(b===btn&&!correct) b.classList.add('wrong');
   });
-  // 정답 공개: 가려진 모든 단어 보여주기
-  document.getElementById('ctx-curr').innerHTML=q.words.map((w,i)=>{
-    if(i===q.askIdx)
-      return correct
-        ? `<span class="ctx-blank" style="border-color:var(--green);color:var(--green);">${esc(w)}</span>`
-        : `<span class="ctx-blank" style="border-color:var(--red);color:var(--red);">${esc(w)}</span>`;
-    if(q.blankIndices.includes(i))
-      return `<span class="ctx-blank-other ctx-revealed">${esc(w)}</span>`;
-    return esc(w);
-  }).join(' ');
+  document.getElementById('context-wrap').innerHTML=buildContextHTML(q, true, correct);
   showFeedback(correct,q.answer);
   setTimeout(()=>{ qIndex++; renderQ(); },1600);
 }
 
 function checkChallenge(){
   const q=questions[qIndex];
-  const val=document.getElementById('challenge-input').value.trim();
+  const val=stripPunct(document.getElementById('challenge-input').value.trim());
   if(!val) return;
   const correct=val===q.answer;
   if(correct) score+=10;
@@ -895,7 +994,8 @@ function checkChallenge(){
   inp.disabled=true;
   document.getElementById('ch-check-btn').style.display='none';
   document.getElementById('ch-next-btn').style.display='';
-  showFeedback(correct,q.answer);
+  document.getElementById('context-wrap').innerHTML=buildContextHTML(q, true, correct);
+  showFeedback(correct, q.rawAnswer||q.answer);
 }
 function nextQ(){ qIndex++; renderQ(); }
 
@@ -930,14 +1030,12 @@ async function showResult(){
 
   const songName=songs.find(s=>s.id===selSongId)?.name||'';
   const voiceName=VOICE_NAMES[selVoice];
-
   showLoading('기록 저장 중...');
   try {
     if(gameMode==='practice'){
       await dbPost('leaderboard',{nick:playerNick,score,song_name:songName,voice:voiceName});
     }
     if(passed){
-      // get current pass count
       const all=await dbGet('pass_board','select=id');
       const passNum=(all?.length||0)+1;
       await dbPost('pass_board',{nick:playerNick,song_name:songName,voice:voiceName,pass_num:passNum});
@@ -947,9 +1045,7 @@ async function showResult(){
   showStep('result');
 }
 
-function replayGame(){
-  startFlow(gameMode);
-}
+function replayGame(){ startFlow(gameMode); }
 function confirmQuit(){
   if(confirm('게임을 종료할까요? 현재 진행은 저장되지 않습니다.')) goPage('home');
 }
@@ -957,15 +1053,12 @@ function confirmQuit(){
 // ═══════════════════════════════════════════
 //  BOARDS
 // ═══════════════════════════════════════════
-async function renderBoards(){
-  await renderPracticeBoard();
-  await renderChallengeBoard();
-}
+async function renderBoards(){ await renderPracticeBoard(); await renderChallengeBoard(); }
+
 async function renderPracticeBoard(){
   const el=document.getElementById('board-practice');
   el.innerHTML='<div class="empty-board">불러오는 중...</div>';
   try {
-    // 점수 내림차순, 동점이면 최신 기록이 위로
     const rows=await sb('leaderboard?select=*&order=score.desc,created_at.desc&limit=10');
     if(!rows||!rows.length){ el.innerHTML='<div class="empty-board">아직 기록이 없어요 🎯<br>연습 모드를 플레이하면 여기에 기록됩니다.</div>'; return; }
     const medals=['🥇','🥈','🥉','4위','5위','6위','7위','8위','9위','10위'];
@@ -987,6 +1080,7 @@ async function renderPracticeBoard(){
       }).join('')}</tbody></table>`;
   } catch(e){ el.innerHTML='<div class="empty-board">불러오기 실패</div>'; }
 }
+
 async function renderChallengeBoard(){
   const el=document.getElementById('board-challenge');
   el.innerHTML='<div class="empty-board">불러오는 중...</div>';
@@ -1009,6 +1103,7 @@ async function renderChallengeBoard(){
       }).join('')}</tbody></table>`;
   } catch(e){ el.innerHTML='<div class="empty-board">불러오기 실패</div>'; }
 }
+
 function switchBoard(type,btn){
   document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -1029,6 +1124,9 @@ function showToast(msg){ const t=document.getElementById('toast');t.textContent=
 
 document.querySelectorAll('.modal-overlay').forEach(m=>{
   m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); });
+});
+document.getElementById('lyrics-modal').addEventListener('click',function(e){
+  if(e.target===this) closeLyricsModal();
 });
 
 // ── START ──

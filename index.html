@@ -129,6 +129,8 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
 .ctx-line{font-family:'Noto Serif KR',serif;font-size:15px;line-height:2.2;color:var(--dim);min-height:30px;}
 .ctx-line.focus{color:var(--text);font-size:17px;font-weight:600;}
 .ctx-blank{display:inline-block;background:rgba(212,168,83,.15);border:2px solid var(--gold);border-radius:6px;padding:1px 14px;min-width:60px;text-align:center;color:var(--gold);font-weight:700;letter-spacing:.05em;}
+.ctx-blank-other{display:inline-block;background:rgba(255,255,255,.05);border:2px dashed rgba(255,255,255,.2);border-radius:6px;padding:1px 10px;min-width:40px;text-align:center;color:var(--dim);}
+.ctx-revealed{border-color:rgba(255,255,255,.3)!important;color:var(--text)!important;background:rgba(255,255,255,.07)!important;}
 
 /* MCQ */
 .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
@@ -705,11 +707,58 @@ async function startFlow(mode){
   document.getElementById('nick-input').value='';
   showStep('nick');
   goPage('game');
-  // store lines for game
   window._gameLines=lines;
+  window._aiBlankMap=null; // 초기화
+
+  // 연습모드일 때만 AI 분석 미리 수행
+  if(mode==='practice'){
+    showLoading('AI가 문맥을 분석하는 중... 잠시만 기다려 주세요 ✨');
+    try {
+      window._aiBlankMap = await analyzeKeyWordsWithAI(lines);
+    } catch(e){
+      console.warn('AI 분석 실패, 랜덤 방식으로 대체:', e.message);
+      window._aiBlankMap = null;
+    }
+    hideLoading();
+  }
 }
 
-function startGame(){
+// Claude API로 가사 핵심 단어 분석
+async function analyzeKeyWordsWithAI(lines){
+  const prompt = `아래는 합창곡 가사입니다. 각 줄에서 가사를 외우는 연습에 가장 중요한 핵심 단어 1~3개를 골라주세요.
+핵심 단어는 의미상 중요하거나, 감정을 전달하거나, 기억하기 어려운 단어여야 합니다.
+조사(은/는/이/가/을/를/의/에/로/으로)만 있는 단어는 피해주세요.
+
+가사:
+${lines.map((l,i)=>`${i}번: ${l}`).join('\n')}
+
+각 줄 번호와 해당 줄에서 가릴 단어들의 인덱스(0부터 시작)를 JSON 배열로만 응답하세요.
+다른 설명 없이 오직 JSON만 응답하세요.
+형식: [{"line":0,"blanks":[1,2]},{"line":1,"blanks":[0]}, ...]
+- blanks는 해당 줄을 공백으로 split했을 때의 단어 인덱스입니다
+- 단어가 2개 이하인 줄은 blanks를 [0]으로 해주세요
+- 반드시 모든 줄에 대해 응답해주세요`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  const text = data.content?.find(c=>c.type==='text')?.text || '[]';
+  const clean = text.replace(/```json|```/g,'').trim();
+  const parsed = JSON.parse(clean);
+  // line번호 → blanks 맵으로 변환
+  const map = {};
+  parsed.forEach(({line, blanks}) => { map[line] = blanks; });
+  return map;
+}
+
+async function startGame(){
   const nick=document.getElementById('nick-input').value.trim();
   if(!nick){ showToast('⚠️ 별명을 입력해 주세요'); return; }
   playerNick=nick;
@@ -722,21 +771,53 @@ function startGame(){
 }
 
 function buildQuestions(lines, count){
-  const eligible=lines.map((l,i)=>({i,l})).filter(x=>x.l.split(/\s+/).length>=2);
+  const minWords = gameMode==='practice' ? 2 : 2;
+  const eligible=lines.map((l,i)=>({i,l})).filter(x=>x.l.split(/\s+/).length>=minWords);
   if(!eligible.length) return [];
   const pool=shuffle([...eligible]).slice(0,Math.min(count,eligible.length));
   pool.sort((a,b)=>a.i-b.i);
   const allWords=Array.from(new Set(lines.join('\n').split(/\s+/).filter(w=>w)));
+
   return pool.map(({i,l})=>{
     const words=l.split(/\s+/);
-    const blankIdx=Math.floor(Math.random()*words.length);
-    const answer=words[blankIdx];
-    let options=null;
+
     if(gameMode==='practice'){
-      const dist=shuffle(allWords.filter(w=>w!==answer)).slice(0,3);
-      options=shuffle([answer,...dist]);
+      let blankIndices;
+
+      // AI 분석 결과가 있으면 사용, 없으면 랜덤
+      if(window._aiBlankMap && window._aiBlankMap[i]){
+        blankIndices = window._aiBlankMap[i].filter(idx=>idx>=0 && idx<words.length);
+        if(!blankIndices.length) blankIndices=[0];
+      } else {
+        // 폴백: 단어 수에 따라 랜덤 2~3개
+        const blankCount = words.length<=4 ? 2 : 3;
+        const maxStart = words.length - blankCount;
+        const blankStart = Math.floor(Math.random()*(maxStart+1));
+        blankIndices = Array.from({length:blankCount},(_,k)=>blankStart+k);
+      }
+
+      // 가려진 단어 중 1개를 정답 문제로 선택
+      const askIdx = blankIndices[Math.floor(Math.random()*blankIndices.length)];
+      const answer = words[askIdx];
+      const dist = shuffle(allWords.filter(w=>w!==answer)).slice(0,3);
+      const options = shuffle([answer,...dist]);
+
+      return {
+        prevLine:  i>0 ? lines[i-1] : '',
+        currLine:  l,
+        nextLine:  i<lines.length-1 ? lines[i+1] : '',
+        words, blankIndices, askIdx, answer, options
+      };
+    } else {
+      // 도전모드: 단어 1개 가리기 (직접 입력)
+      const blankIdx=Math.floor(Math.random()*words.length);
+      return {
+        prevLine:  i>0 ? lines[i-1] : '',
+        currLine:  l,
+        nextLine:  i<lines.length-1 ? lines[i+1] : '',
+        words, blankIndices:[blankIdx], askIdx:blankIdx, answer:words[blankIdx], options:null
+      };
     }
-    return {prevLine:i>0?lines[i-1]:'',currLine:l,nextLine:i<lines.length-1?lines[i+1]:'',words,blankIdx,answer,options};
   });
 }
 
@@ -751,8 +832,15 @@ function renderQ(){
 
   document.getElementById('ctx-prev').textContent=q.prevLine||'';
   document.getElementById('ctx-next').textContent=q.nextLine||'';
-  document.getElementById('ctx-curr').innerHTML=q.words.map((w,i)=>
-    i===q.blankIdx?'<span class="ctx-blank">?</span>':esc(w)).join(' ');
+
+  // 가려진 단어들: 정답 칸은 '?' 강조, 나머지 빈칸은 '___' 회색으로
+  document.getElementById('ctx-curr').innerHTML=q.words.map((w,i)=>{
+    if(i===q.askIdx)
+      return '<span class="ctx-blank">?</span>';
+    if(q.blankIndices.includes(i))
+      return '<span class="ctx-blank-other">　'.repeat(Math.max(1,w.length))+'</span>';
+    return esc(w);
+  }).join(' ');
 
   if(gameMode==='practice'){
     document.getElementById('mcq-area').style.display='';
@@ -782,8 +870,18 @@ function pickOption(btn,chosen){
     if(bVal===q.answer) b.classList.add('correct');
     else if(b===btn&&!correct) b.classList.add('wrong');
   });
+  // 정답 공개: 가려진 모든 단어 보여주기
+  document.getElementById('ctx-curr').innerHTML=q.words.map((w,i)=>{
+    if(i===q.askIdx)
+      return correct
+        ? `<span class="ctx-blank" style="border-color:var(--green);color:var(--green);">${esc(w)}</span>`
+        : `<span class="ctx-blank" style="border-color:var(--red);color:var(--red);">${esc(w)}</span>`;
+    if(q.blankIndices.includes(i))
+      return `<span class="ctx-blank-other ctx-revealed">${esc(w)}</span>`;
+    return esc(w);
+  }).join(' ');
   showFeedback(correct,q.answer);
-  setTimeout(()=>{ qIndex++; renderQ(); },1400);
+  setTimeout(()=>{ qIndex++; renderQ(); },1600);
 }
 
 function checkChallenge(){

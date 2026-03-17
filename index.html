@@ -244,6 +244,12 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
 .lyrics-body .lyric-line{padding:2px 0;}
 .lyrics-body .lyric-blank{height:24px;display:block;color:var(--dim);font-size:13px;text-align:center;letter-spacing:.2em;}
 
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 10px;text-align:center;}
+.stat-num{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--gold);line-height:1.1;}
+.stat-label{font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:.03em;}
+
 /* Toast */
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:10px 22px;font-size:14px;opacity:0;transition:all .3s;pointer-events:none;z-index:1000;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -281,6 +287,21 @@ textarea.text-input{width:100%;min-height:150px;line-height:1.8;resize:vertical;
 
 <!-- ═══ HOME ═══ -->
 <div class="page active" id="page-home">
+  <!-- 통계 -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-visitors">—</div>
+      <div class="stat-label">👥 방문자</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-practice">—</div>
+      <div class="stat-label">🎯 연습 완료</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-challenge">—</div>
+      <div class="stat-label">🏅 도전 완료</div>
+    </div>
+  </div>
   <div class="card">
     <div class="card-title">🎵 노래 선택</div>
     <div class="picker-grid" id="home-song-picker">
@@ -515,8 +536,33 @@ async function init(){
     if(songs.length){ selSongId=songs[0].id; adminSongId=songs[0].id; }
     renderHomeSongPicker();
     await renderBoards();
+    await incrementStat('visitors');
+    await loadStats();
   } catch(e){ showToast('❌ 서버 연결 실패: '+e.message); }
   hideLoading();
+}
+
+// ═══════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════
+async function incrementStat(key){
+  try {
+    // RPC 없이 직접 현재값 읽고 +1
+    const rows = await sb('stats?key=eq.'+key+'&select=count');
+    const cur = rows?.[0]?.count ?? 0;
+    await dbPatch('stats','key=eq.'+key, {count: cur+1});
+  } catch(e){ console.warn('stat increment 실패:', e.message); }
+}
+
+async function loadStats(){
+  try {
+    const rows = await sb('stats?select=key,count');
+    const map = {};
+    rows.forEach(r=>{ map[r.key]=r.count; });
+    document.getElementById('stat-visitors').textContent  = (map.visitors      ?? 0).toLocaleString();
+    document.getElementById('stat-practice').textContent  = (map.practice_done ?? 0).toLocaleString();
+    document.getElementById('stat-challenge').textContent = (map.challenge_done ?? 0).toLocaleString();
+  } catch(e){ console.warn('stat load 실패:', e.message); }
 }
 
 // ═══════════════════════════════════════════
@@ -1034,12 +1080,18 @@ async function showResult(){
   try {
     if(gameMode==='practice'){
       await dbPost('leaderboard',{nick:playerNick,score,song_name:songName,voice:voiceName});
+      await incrementStat('practice_done');
+    }
+    if(gameMode==='challenge'){
+      await incrementStat('challenge_done');
     }
     if(passed){
       const all=await dbGet('pass_board','select=id');
       const passNum=(all?.length||0)+1;
       await dbPost('pass_board',{nick:playerNick,song_name:songName,voice:voiceName,pass_num:passNum});
     }
+    // 홈 통계 갱신
+    await loadStats();
   } catch(e){ showToast('⚠️ 기록 저장 실패: '+e.message); }
   hideLoading();
   showStep('result');
